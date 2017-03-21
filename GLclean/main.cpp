@@ -24,7 +24,7 @@ void mouseButtonCallBack(GLFWwindow* window, int key, int action, int mode);
 void do_movement();
 void placeBlock();
 void highLightStart(); ///CREATE GOOD HIGHLIGHT FUNCTIONS LATER!!!!!!!!!! -note- + 0.05 scaling on highlight looks good
-void highLightEnd();   /// REFER BACK TO TUTORIAL!!!!
+void highLightEnd();   /// REFER BACK TO TUTORIAL!!!!gerge
 GLuint generateAttachmentTexture(GLboolean depth, GLboolean stencil);
 
 const GLuint WIDTH = 800, HEIGHT = 600;
