@@ -21,17 +21,34 @@ GLint TextureFromFile(const char* path, string directory);
 class Model
 {
 public:
+	/*  variables */
+	glm::vec3 m_position;
+	glm::vec3 m_size;
+
 	/*  Functions   */
 	// Constructor, expects a filepath to a 3D model.
-	Model(GLchar* path)
+	Model(GLchar* path, glm::vec3 position, glm::vec3 size)
 	{
 		this->loadModel(path);
-
+		m_position = position;
+		m_size = size;
 	}
-
-	// Draws the model, and thus all its meshes
-	void Draw(Shader shader, std::vector<glm::vec3> light_pos, glm::vec3 viewPos)
+	void updatePosition(glm::vec3 newPos)
 	{
+		m_position = newPos;
+	}
+	// Draws the model, and thus all its meshes
+	void Draw(Shader shader, std::vector<glm::vec3> light_pos, glm::vec3 viewPos, glm::mat4x4 projection, glm::mat4x4 view)
+	{
+		shader.Use();
+
+		glm::mat4x4 model = glm::translate(glm::mat4x4(1), m_position);
+		model = glm::scale(model, m_size);
+
+		glUniformMatrix4fv(glGetUniformLocation(shader.Program, "model"), 1, GL_FALSE, glm::value_ptr(model));
+		glUniformMatrix4fv(glGetUniformLocation(shader.Program, "view"), 1, GL_FALSE, glm::value_ptr(view));
+		glUniformMatrix4fv(glGetUniformLocation(shader.Program, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+
 		for (GLuint i = 0; i < this->meshes.size(); i++)
 			this->meshes[i].Draw(shader, light_pos, viewPos);
 	}
@@ -90,7 +107,6 @@ private:
 //THIS REALLY NEEDS WORK
 	Mesh processMesh(aiMesh* mesh, const aiScene* scene)
 	{
-		
 			// Data to fill
 			vector<VertexT> vertices;
 			vector<VertexC> verticesC;
@@ -152,7 +168,7 @@ private:
 		
 					vertices.push_back(vertex);
 				}
-		}
+			}
 
 		// Now wak through each of the mesh's faces (a face is a mesh its triangle) and retrieve the corresponding vertex indices.
 		for (GLuint i = 0; i < mesh->mNumFaces; i++)

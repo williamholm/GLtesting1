@@ -125,14 +125,22 @@
   <ItemGroup>
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="Cube.cpp" />
+    <ClCompile Include="InputManager.cpp" />
+    <ClCompile Include="MasterRenderer.cpp" />
+    <ClCompile Include="ResourceManager.cpp" />
+    <ClCompile Include="Terrain.cpp" />
     <ClCompile Include="Window.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h" />
     <ClInclude Include="Cube.h" />
+    <ClInclude Include="InputManager.h" />
+    <ClInclude Include="MasterRenderer.h" />
     <ClInclude Include="Mesh.h" />
     <ClInclude Include="Model.h" />
+    <ClInclude Include="ResourceManager.h" />
+    <ClInclude Include="Terrain.h" />
     <ClInclude Include="Window.h" />
     <ClInclude Include="Shader.h" />
   </ItemGroup>

@@ -69,7 +69,7 @@ public:
 		
 
 		// Now that we have all the required data, set the vertex buffers and its attribute pointers.
-		//this->setupMesh();
+		this->setupMesh();
 	}
 	
 	Mesh(vector<VertexC> vertices, vector<GLuint> indices,  aiColor3D diff, aiColor3D spec, float shininess)

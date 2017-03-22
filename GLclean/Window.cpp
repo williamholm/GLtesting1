@@ -34,4 +34,6 @@ void Window::init(int width, int height, char windowName[])
 	glfwSetInputMode(this->m_window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 	glDepthFunc(GL_LESS);
 
+
+
 }

@@ -1,20 +1,7 @@
 #define GLEW_STATIC
-//#include <GL\glew.h>
-//#include <GLFW\glfw3.h>
-//
-//#include <iostream>
-//#include <string>
-//
-//
-//#include <glm/glm.hpp>
-//#include <glm/gtc/matrix_transform.hpp>
-//#include <glm/gtc/type_ptr.hpp>
-//
-//#include "Shader.h"
 #include "Cube.h"
 #include "Camera.h"
 #include "Window.h"
-
 #include "Model.h"
 
 void keyCallBack(GLFWwindow* window, int key, int scancode, int action, int mode);
@@ -23,8 +10,6 @@ void scrollCallBack(GLFWwindow* window, double xoffset, double yoffset);
 void mouseButtonCallBack(GLFWwindow* window, int key, int action, int mode);
 void do_movement();
 void placeBlock();
-void highLightStart(); ///CREATE GOOD HIGHLIGHT FUNCTIONS LATER!!!!!!!!!! -note- + 0.05 scaling on highlight looks good
-void highLightEnd();   /// REFER BACK TO TUTORIAL!!!!gerge
 GLuint generateAttachmentTexture(GLboolean depth, GLboolean stencil);
 
 const GLuint WIDTH = 800, HEIGHT = 600;
@@ -35,7 +20,6 @@ GLfloat lastX = WIDTH / 2.0;
 GLfloat lastY = HEIGHT / 2.0;
 
 bool    keys[1024];
-bool	isShaderSet = true;
 
 GLfloat deltaTime = 0.0f;
 GLfloat lastFrame = 0.0f;
@@ -74,42 +58,16 @@ int main()
 	shaders.emplace_back(Shader("vertNoTextureModel.txt", "fragNoTextureModel.txt"));
 
 
-	
-	// Set our texture parameters
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);	
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	// Set texture filtering
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-	glEnable(GL_DEPTH_TEST);//enables depth testing
-//	glEnable(GL_CULL_FACE);
-//	glCullFace(GL_BACK);
-//	glFrontFace(GL_CW);
-//	glEnable(GL_BLEND);
-//	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-
-	for (int i = 0; i < 2; ++i)
-	{
-		for (int j = 0; j < 2; ++j)
-		{
-			cubes.emplace_back(Cube(1, glm::vec3(i,-3, j), shaders[ShaderType::LIGHTING], "container.jpg"));
-		}
-	}
-
-	cubes.emplace_back(Cube(1, glm::vec3(3, -2, 3), shaders[ShaderType::LIGHTING], "container.jpg"));
-	cubes.emplace_back(Cube(1, glm::vec3(5, -2, 6), shaders[ShaderType::LIGHTING], "blending_transparent_window.png"));
-
 	lights.emplace_back(Cube(0.3, glm::vec3(6, 1, 6), shaders[ShaderType::LIGHTOBJ]));
-	lightPositions.emplace_back(glm::vec3(6, 1, 6));//31fps
+	lightPositions.emplace_back(glm::vec3(6, 1, 6));
 
-	Model ourModel("ModelStuff/NanoSluit/simple_sword2.obj");//note nanosuit is ~~13k vertices
-	Model g = ourModel;
+	Model ourModel("ModelStuff/NanoSluit/simple_sword2.obj", glm::vec3(5,5,0), glm::vec3(0.2,0.2,0.2));//note nanosuit is ~~13k vertices
+	Model g("ModelStuff/NanoSluit/spear.obj",glm::vec3(0,0,0),glm::vec3(0.4,0.4,0.4));
+	Model person("ModelStuff/NanoSluit/person.obj", glm::vec3(0, 0, 0), glm::vec3(0.2, 0.13, 0.2));
 
-	glm::mat4 view;
-	glm::mat4 projection;
 
+	glm::mat4x4 view;
+	glm::mat4x4 projection;
 
 	GLfloat vertexPositions[]
 	{
@@ -147,12 +105,11 @@ int main()
 	glBindRenderbuffer(GL_RENDERBUFFER, rbo);
 	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, 800, 600); // Use a single renderbuffer object for both a depth AND stencil buffer.
 	glBindRenderbuffer(GL_RENDERBUFFER, 0);
-	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo); // Now actually attach it
-																								  // Now that we actually created the framebuffer and added all attachments we want to check if it is actually complete now
+	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo); //  attach it. completed the framebuffer and  have 
+																							//added all attachments. check if it is complete 
 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
 		cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << endl;
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
 
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
@@ -167,49 +124,32 @@ int main()
 		glfwPollEvents();
 		do_movement();
 		placeBlock();
-		
+		view = camera.GetViewMatrix();		
 	
-		glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
+		glBindFramebuffer(GL_FRAMEBUFFER, framebuffer); //Draw normally here		
 		glClearColor(0.1f, 0.3f, 0.7f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // We're not using stencil buffer now
-	
-		glEnable(GL_DEPTH_TEST);
-		
-		view = camera.GetViewMatrix();
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); 	
+		glEnable(GL_DEPTH_TEST);		
 
-	//	cubes[1].usingShader();
-	//	for (int i = 0; i < cubes.size(); i++)
-	//	{
-	//		cubes[i].draw(view, camera.Zoom, camera.Position, lightPositions);	
-	//	}
-	
 		lights[0].usingShader();
 		for (int i = 0; i < lights.size() ; i++)
 		{
 			lights[i].draw(view, camera.Zoom);
 		}
 	
-		shaders[ShaderType::MODEL_C].Use();
+		shaders[ShaderType::MODEL_C].Use();	
+		projection = glm::perspective(camera.Zoom, (GLfloat)WIDTH/(GLfloat)HEIGHT, 0.01f, 100.0f);		
+		//person.updatePosition(glm::vec3(camera.Position.x, camera.Position.y -0.5 , camera.Position.z -0.5 ));
+		person.updatePosition(glm::vec3(camera.Position.x +  camera.Front.x, camera.Position.y +  camera.Front.y, camera.Position.z +  camera.Front.z));
 	
-		projection = glm::perspective(camera.Zoom, (GLfloat)WIDTH/(GLfloat)HEIGHT, 0.01f, 100.0f);
-	
-		
-		glUniformMatrix4fv(glGetUniformLocation(shaders[ShaderType::MODEL_C].Program, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
-		glUniformMatrix4fv(glGetUniformLocation(shaders[ShaderType::MODEL_C].Program, "view"), 1, GL_FALSE, glm::value_ptr(view));
-		/// move this to the draw function in mesh?
-		// Draw the loaded model 
-		glm::mat4 model;
-		model = glm::translate(model, glm::vec3(1.0f, -2.5f, 1.0f)); // Translate it down a bit so it's at the center of the scene
-		model = glm::scale(model, glm::vec3(0.2f, 0.2f, 0.2f));	// It's a bit too big for our scene, so scale it down
-		glUniformMatrix4fv(glGetUniformLocation(shaders[ShaderType::MODEL_C].Program, "model"), 1, GL_FALSE, glm::value_ptr(model));
-		
-		
-	
-		g.Draw(shaders[ShaderType::MODEL_C], lightPositions, camera.Position);
-	
+		person.Draw(shaders[ShaderType::MODEL_C], lightPositions, camera.Position, projection, view);
+		ourModel.Draw(shaders[ShaderType::MODEL_C], lightPositions, camera.Position, projection, view);
+
+		shaders[ShaderType::MODEL].Use();
+		g.Draw(shaders[ShaderType::MODEL], lightPositions, camera.Position, projection, view);
 		glBindVertexArray(0);
 	
-		glBindFramebuffer(GL_FRAMEBUFFER, 0); // back to default
+		glBindFramebuffer(GL_FRAMEBUFFER, 0); // back to default, draw quad.
 		glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 		glDisable(GL_DEPTH_TEST);
@@ -219,8 +159,7 @@ int main()
 		glBindTexture(GL_TEXTURE_2D, textureColorbuffer);
 		glDrawArrays(GL_TRIANGLES, 0, 6);
 		glBindVertexArray(0);
-		
-	
+			
 		glfwSwapBuffers(window.m_window);
 	}
 
@@ -308,19 +247,7 @@ void placeBlock()
 		keys[GLFW_MOUSE_BUTTON_2] = false;
 	}
 }
-void highLightStart()
-{
-	glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
-	glStencilMask(0x00); // Disable writing to the stencil buffer
-	glDisable(GL_DEPTH_TEST);
 
-}
-
-void highLightEnd()
-{
-	glStencilMask(0xFF);
-	glEnable(GL_DEPTH_TEST);
-}
 GLuint generateAttachmentTexture(GLboolean depth, GLboolean stencil)
 {
 	// What enum to use?
