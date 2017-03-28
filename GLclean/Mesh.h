@@ -87,7 +87,7 @@ public:
 
 
 	// Render the mesh
-	void Draw(Shader shader, std::vector<glm::vec3> light_pos, glm::vec3 viewPos)
+	void Draw(Shader shader) 
 	{
 		// Bind appropriate textures
 	GLuint diffuseNr = 1;
@@ -110,14 +110,7 @@ public:
 		glBindTexture(GL_TEXTURE_2D, this->textures[i].id);
 	}
 
-		// Also set each mesh's shininess property to a default value (if you want you could extend this to another mesh property and possibly change this value)
-		glUniform3f(glGetUniformLocation(shader.Program, "viewPos"), viewPos.x, viewPos.y, viewPos.z);
-
 		glUniform1f(glGetUniformLocation(shader.Program, "material.shininess"), m_shininess);
-		glUniform3f(glGetUniformLocation(shader.Program, "dirLight.direction"), -0.2f, -1.0f, -0.3f);
-		glUniform3f(glGetUniformLocation(shader.Program, "dirLight.ambient"), 0.05f, 0.05f, 0.05f);
-		glUniform3f(glGetUniformLocation(shader.Program, "dirLight.diffuse"), 0.8f, 0.8f, 0.8f);
-		glUniform3f(glGetUniformLocation(shader.Program, "dirLight.specular"), 0.5f, 0.5f, 0.5f);
 
 		//check if vertexC is being used
 		if (CorNo)
@@ -126,15 +119,7 @@ public:
 			glUniform3f(glGetUniformLocation(shader.Program, "material.spec"), m_spec.r, m_spec.g, m_spec.b);
 		}
 		
-		for (int i = 0; i < light_pos.size(); i++)
-		{
-			std::string iString = std::to_string(i);
-			glUniform3f(glGetUniformLocation(shader.Program, std::string("pointLights[" + iString + "].position").c_str()),
-				light_pos[i].x, light_pos[i].y, light_pos[i].z);
-			glUniform3f(glGetUniformLocation(shader.Program, std::string("pointLights[" + iString + "].ambient").c_str()), 0.05f, 0.05f, 0.05f);
-			glUniform3f(glGetUniformLocation(shader.Program, std::string("pointLights[" + iString + "].diffuse").c_str()), 0.8f, 0.8f, 0.8f);
-			glUniform3f(glGetUniformLocation(shader.Program, std::string("pointLights[" + iString + "].specular").c_str()), 1.0f, 1.0f, 1.0f);
-		}
+
 		// Draw mesh
 		
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
@@ -149,7 +134,6 @@ public:
 			glActiveTexture(GL_TEXTURE0 + i);
 			glBindTexture(GL_TEXTURE_2D, 0);
 		}
-
 	}
 
 private:

@@ -127,6 +127,7 @@
     <ClCompile Include="Cube.cpp" />
     <ClCompile Include="InputManager.cpp" />
     <ClCompile Include="MasterRenderer.cpp" />
+    <ClCompile Include="Player.cpp" />
     <ClCompile Include="ResourceManager.cpp" />
     <ClCompile Include="Terrain.cpp" />
     <ClCompile Include="Window.cpp" />
@@ -139,6 +140,7 @@
     <ClInclude Include="MasterRenderer.h" />
     <ClInclude Include="Mesh.h" />
     <ClInclude Include="Model.h" />
+    <ClInclude Include="Player.h" />
     <ClInclude Include="ResourceManager.h" />
     <ClInclude Include="Terrain.h" />
     <ClInclude Include="Window.h" />

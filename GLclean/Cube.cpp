@@ -167,7 +167,6 @@ void Cube::setUpStdUniforms(const glm::mat4 &view, const GLfloat &zoom)
 
 	GLint viewLoc = glGetUniformLocation(m_shader.Program, "view");
 	glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
-
 	glm::mat4 projection;
 	projection = glm::perspective(zoom, (GLfloat)800 / (GLfloat)600, 0.01f, 100.0f);
 

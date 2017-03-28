@@ -2,7 +2,7 @@
 #include "Cube.h"
 #include "Camera.h"
 #include "Window.h"
-#include "Model.h"
+#include "MasterRenderer.h"
 
 void keyCallBack(GLFWwindow* window, int key, int scancode, int action, int mode);
 void mouseCallBack(GLFWwindow* window, double xpos, double ypos);
@@ -45,10 +45,16 @@ int main()
 	Window window;
 	window.init(WIDTH, HEIGHT, "CLEAN\n");
 
+#pragma region setKeyCallBacks
 	glfwSetKeyCallback(window.m_window, keyCallBack);
 	glfwSetCursorPosCallback(window.m_window, mouseCallBack);
 	glfwSetScrollCallback(window.m_window, scrollCallBack);
 	glfwSetMouseButtonCallback(window.m_window, mouseButtonCallBack);
+#pragma endregion
+
+#pragma region shaders
+
+
 
 	shaders.emplace_back(Shader("vertShaderLight.txt", "fragShaderLight.txt"));
 	shaders.emplace_back(Shader("vertObjShader.txt", "fragLightObjShader.txt"));
@@ -56,19 +62,22 @@ int main()
 	shaders.emplace_back(Shader("vertexShader.txt", "singleColourFrag.txt"));
 	shaders.emplace_back(Shader("vertSimple.txt", "fragSimple.txt"));
 	shaders.emplace_back(Shader("vertNoTextureModel.txt", "fragNoTextureModel.txt"));
+#pragma endregion
 
+	lights.emplace_back(Cube(0.1, glm::vec3(0, 0, 0), shaders[ShaderType::LIGHTOBJ]));
+	lightPositions.emplace_back(glm::vec3(0, 0, 0));
+//note nanosuit is ~~13k vertices
+	Model g("ModelStuff/NanoSluit/simple_sword2.obj",glm::vec3(0,0,0),glm::vec3(1,1,1));
+	Model person("ModelStuff/NanoSluit/C1.obj", glm::vec3(0, 0, 0), glm::vec3(1, 1, 1));
 
-	lights.emplace_back(Cube(0.3, glm::vec3(6, 1, 6), shaders[ShaderType::LIGHTOBJ]));
-	lightPositions.emplace_back(glm::vec3(6, 1, 6));
-
-	Model ourModel("ModelStuff/NanoSluit/simple_sword2.obj", glm::vec3(5,5,0), glm::vec3(0.2,0.2,0.2));//note nanosuit is ~~13k vertices
-	Model g("ModelStuff/NanoSluit/spear.obj",glm::vec3(0,0,0),glm::vec3(0.4,0.4,0.4));
-	Model person("ModelStuff/NanoSluit/person.obj", glm::vec3(0, 0, 0), glm::vec3(0.2, 0.13, 0.2));
-
-
+	Terrain terrain;
+	MasterRenderer renderMaster;
+	renderMaster.loadTerrain(&terrain);
 	glm::mat4x4 view;
 	glm::mat4x4 projection;
 
+	float z = 5 * camera.Front.z;
+#pragma region Render/Framebuffer
 	GLfloat vertexPositions[]
 	{
 		-1.0f,  1.0f,  0.0f, 1.0f,
@@ -91,7 +100,6 @@ int main()
 	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (GLvoid*)(2 * sizeof(GLfloat)));
 	glBindVertexArray(0);
 
-
 	// Framebuffers
 	GLuint framebuffer;
 	glGenFramebuffers(1, &framebuffer);
@@ -103,7 +111,7 @@ int main()
 	GLuint rbo;
 	glGenRenderbuffers(1, &rbo);
 	glBindRenderbuffer(GL_RENDERBUFFER, rbo);
-	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, 800, 600); // Use a single renderbuffer object for both a depth AND stencil buffer.
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, WIDTH, HEIGHT); // Use a single renderbuffer object for both a depth AND stencil buffer.
 	glBindRenderbuffer(GL_RENDERBUFFER, 0);
 	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo); //  attach it. completed the framebuffer and  have 
 																							//added all attachments. check if it is complete 
@@ -112,6 +120,14 @@ int main()
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	for (int i = 0; i < 3; i++)
+	{
+		g.updatePosition(glm::vec3(5*i, 0, 5*i));
+		renderMaster.addModel(&g);
+	}
+	
+
+#pragma endregion
 
 	while (!glfwWindowShouldClose(window.m_window))
 	{	
@@ -120,10 +136,13 @@ int main()
 		deltaTime = currentFrame - lastFrame;
 		lastFrame = currentFrame;
 	//	std::cout << 1 / deltaTime << "\n";
+	//	std::cout << "(" << person.m_position.x << ", " << person.m_position.y << ", " << person.m_position.z<<")\n";
 	
 		glfwPollEvents();
 		do_movement();
 		placeBlock();
+
+		projection = glm::perspective(camera.Zoom, (GLfloat)WIDTH/(GLfloat)HEIGHT, 0.01f, 100.0f);		
 		view = camera.GetViewMatrix();		
 	
 		glBindFramebuffer(GL_FRAMEBUFFER, framebuffer); //Draw normally here		
@@ -136,17 +155,14 @@ int main()
 		{
 			lights[i].draw(view, camera.Zoom);
 		}
-	
-		shaders[ShaderType::MODEL_C].Use();	
-		projection = glm::perspective(camera.Zoom, (GLfloat)WIDTH/(GLfloat)HEIGHT, 0.01f, 100.0f);		
-		//person.updatePosition(glm::vec3(camera.Position.x, camera.Position.y -0.5 , camera.Position.z -0.5 ));
-		person.updatePosition(glm::vec3(camera.Position.x +  camera.Front.x, camera.Position.y +  camera.Front.y, camera.Position.z +  camera.Front.z));
-	
-		person.Draw(shaders[ShaderType::MODEL_C], lightPositions, camera.Position, projection, view);
-		ourModel.Draw(shaders[ShaderType::MODEL_C], lightPositions, camera.Position, projection, view);
 
-		shaders[ShaderType::MODEL].Use();
-		g.Draw(shaders[ShaderType::MODEL], lightPositions, camera.Position, projection, view);
+
+		person.updatePosition(glm::vec3(camera.Position.x, renderMaster.m_terrain->getHeight(person.m_position.x, person.m_position.z), camera.Position.z + z));
+
+
+		renderMaster.updateShaderInfo(view, projection, camera.Position, lightPositions);
+		renderMaster.drawModels(shaders[ShaderType::MODEL_C]);
+		person.Draw(shaders[ShaderType::MODEL_C]);
 		glBindVertexArray(0);
 	
 		glBindFramebuffer(GL_FRAMEBUFFER, 0); // back to default, draw quad.
@@ -159,6 +175,7 @@ int main()
 		glBindTexture(GL_TEXTURE_2D, textureColorbuffer);
 		glDrawArrays(GL_TRIANGLES, 0, 6);
 		glBindVertexArray(0);
+		
 			
 		glfwSwapBuffers(window.m_window);
 	}

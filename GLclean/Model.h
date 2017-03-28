@@ -1,6 +1,6 @@
 #pragma once
 // Std. Includes
-#include <string>
+
 #include <fstream>
 #include <sstream>
 #include <iostream>
@@ -8,15 +8,14 @@
 #include <vector>
 using namespace std;
 // GL Includes
-#include <GL/glew.h> // Contains all the necessery OpenGL includes
+#include <glm/gtc/type_ptr.hpp>
+
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
 #include <src/SOIL.h>
-
+#include "ResourceManager.h"
 #include "Mesh.h"
-
-GLint TextureFromFile(const char* path, string directory);
 
 class Model
 {
@@ -24,7 +23,30 @@ public:
 	/*  variables */
 	glm::vec3 m_position;
 	glm::vec3 m_size;
+	Model() {}
+	GLint TextureFromFile(const char* path, string directory)
+	{
+		//Generate texture ID and load texture data 
+		string filename = string(path);
+		filename = directory + '/' + filename;
+		GLuint textureID;
+		glGenTextures(1, &textureID);
+		int width, height;
+		unsigned char* image = SOIL_load_image(filename.c_str(), &width, &height, 0, SOIL_LOAD_RGB);
+		// Assign texture to ID
+		glBindTexture(GL_TEXTURE_2D, textureID);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
+		glGenerateMipmap(GL_TEXTURE_2D);
 
+		// Parameters
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glBindTexture(GL_TEXTURE_2D, 0);
+		SOIL_free_image_data(image);
+		return textureID;
+	}
 	/*  Functions   */
 	// Constructor, expects a filepath to a 3D model.
 	Model(GLchar* path, glm::vec3 position, glm::vec3 size)
@@ -38,19 +60,19 @@ public:
 		m_position = newPos;
 	}
 	// Draws the model, and thus all its meshes
-	void Draw(Shader shader, std::vector<glm::vec3> light_pos, glm::vec3 viewPos, glm::mat4x4 projection, glm::mat4x4 view)
+    void Draw(Shader shader)
 	{
-		shader.Use();
 
 		glm::mat4x4 model = glm::translate(glm::mat4x4(1), m_position);
 		model = glm::scale(model, m_size);
-
 		glUniformMatrix4fv(glGetUniformLocation(shader.Program, "model"), 1, GL_FALSE, glm::value_ptr(model));
-		glUniformMatrix4fv(glGetUniformLocation(shader.Program, "view"), 1, GL_FALSE, glm::value_ptr(view));
-		glUniformMatrix4fv(glGetUniformLocation(shader.Program, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
-
 		for (GLuint i = 0; i < this->meshes.size(); i++)
-			this->meshes[i].Draw(shader, light_pos, viewPos);
+			this->meshes[i].Draw(shader);
+	}
+
+	vector<Mesh> getMeshes()
+	{
+		return meshes;
 	}
 
 private:
@@ -65,9 +87,7 @@ private:
 	{
 		// Read file via ASSIMP
 		Assimp::Importer importer;
-		//const aiScene* scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs);
-		const aiScene* scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_FlipUVs | aiProcess_JoinIdenticalVertices
-		);
+		const aiScene* scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs);
 
 
 
@@ -185,7 +205,6 @@ private:
 
 			float shininess;
 			material->Get(AI_MATKEY_SHININESS, shininess);
-			std::cout << shininess;
 
 			// We assume a convention for sampler names in the shaders. Each diffuse texture should be named
 			// as 'texture_diffuseN' where N is a sequential number ranging from 1 to MAX_SAMPLER_NUMBER. 
@@ -204,7 +223,6 @@ private:
 				// 2. Specular maps
 				vector<Texture> specularMaps = this->loadMaterialTextures(material, aiTextureType_SPECULAR, "texture_specular");
 				textures.insert(textures.end(), specularMaps.begin(), specularMaps.end());
-				std::cout << "hello";
 				// Return a mesh object created from the extracted mesh data
 				return Mesh(vertices, indices, textures, shininess);
 			}
@@ -216,7 +234,7 @@ private:
 				aiColor3D specColour(0.f, 0.f, 0.f);
 				material->Get(AI_MATKEY_COLOR_SPECULAR, specColour);
 				
-				return Mesh(verticesC, indices, difColour, specColour, shininess);
+				return Mesh(verticesC, indices, difColour, specColour, shininess/4);
 			}
 		}	
 		
@@ -254,31 +272,6 @@ private:
 		}
 		return textures;
 	}
+
 };
 
-
-
-
-GLint TextureFromFile(const char* path, string directory)
-{
-	//Generate texture ID and load texture data 
-	string filename = string(path);
-	filename = directory + '/' + filename;
-	GLuint textureID;
-	glGenTextures(1, &textureID);
-	int width, height;
-	unsigned char* image = SOIL_load_image(filename.c_str(), &width, &height, 0, SOIL_LOAD_RGB);
-	// Assign texture to ID
-	glBindTexture(GL_TEXTURE_2D, textureID);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
-	glGenerateMipmap(GL_TEXTURE_2D);
-
-	// Parameters
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glBindTexture(GL_TEXTURE_2D, 0);
-	SOIL_free_image_data(image);
-	return textureID;
-}

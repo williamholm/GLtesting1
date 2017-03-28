@@ -1,0 +1,12 @@
+# Blender MTL File: 'CorrectTerrainStructure.blend'
+# Material Count: 1
+
+newmtl Material.001
+Ns 82.352941
+Ka 1.000000 1.000000 1.000000
+Kd 0.070879 0.125219 0.000000
+Ks 0.016969 0.031579 0.000354
+Ke 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 2

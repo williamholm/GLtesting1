@@ -1,0 +1,12 @@
+# Blender MTL File: 'TestTerrain.blend'
+# Material Count: 1
+
+newmtl Material.001
+Ns 25.490196
+Ka 1.000000 1.000000 1.000000
+Kd 0.182619 0.219065 0.032214
+Ks 0.015239 0.026316 0.001474
+Ke 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 2
