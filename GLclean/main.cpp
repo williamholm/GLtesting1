@@ -136,7 +136,7 @@ int main()
 		deltaTime = currentFrame - lastFrame;
 		lastFrame = currentFrame;
 	//	std::cout << 1 / deltaTime << "\n";
-	//	std::cout << "(" << person.m_position.x << ", " << person.m_position.y << ", " << person.m_position.z<<")\n";
+		std::cout << "(" << person.m_position.x << ", " << person.m_position.y << ", " << person.m_position.z<<")\n";
 	
 		glfwPollEvents();
 		do_movement();

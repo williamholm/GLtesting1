@@ -14,6 +14,6 @@ public:
 	float barryInterpolation(glm::vec3 v, glm::vec3 u, glm::vec3 w, glm::vec2 pos);
 private:
 	void createGrid();
-	void sortVertices();
+	void readVertices();
 };
 
