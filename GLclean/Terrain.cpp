@@ -9,8 +9,7 @@
 
 Terrain::Terrain()
 {
-	this->m_terrainModel = Model("ModelStuff/NanoSluit/TestTerrain.obj", glm::vec3(0, 0, 0), glm::vec3(1, 1, 1));
-
+	this->m_terrainModel = Model("ModelStuff/NanoSluit/antLS1.obj", glm::vec3(0, 0, 0), glm::vec3(1, 1, 1));
 	readVertices();
 	createGrid();
 	//sorted in order of x coord -> 
@@ -24,7 +23,8 @@ Terrain::~Terrain()
 void Terrain::readVertices()
 { //model space
 	ifstream file;
-	file.open("ModelStuff/NanoSluit/correctVertices.txt", std::fstream::in | std::fstream::out);
+	file.open("ModelStuff/NanoSluit/correctAntLS1.txt", std::fstream::in | std::fstream::out);
+
 	file.seekg(0, file.end);
 	int length = file.tellg();
 	file.seekg(0, file.beg);
@@ -79,9 +79,7 @@ void Terrain::createGrid()
 	//correct length value after deleting duplicates and set the number of columns/rows
 	int length = sqrt(m_terrainXYZ.size());
 	m_gridRows = length;
-	int temp = m_gridRows / 2;
 	m_verticeDistance = m_terrainXYZ[1].x - m_terrainXYZ[0].x;
-
 	for (int i = 0; i < length; i++)
 	{
 		for (int j = 0; j < length; j++)
@@ -97,8 +95,15 @@ float Terrain::getHeight(float x, float z)
 	//convert to grid space;
 	x /= m_verticeDistance;
 	z /= m_verticeDistance;
-	x += (m_gridRows)/ 2;
-	z += (m_gridRows)/ 2;
+
+	if (!(m_gridRows % 2)){
+		x += ((m_gridRows - 1.0f) / 2.0f);
+		z += ((m_gridRows - 1.0f) / 2.0f);
+	}
+	else {
+		x += (m_gridRows) / 2;
+		z += (m_gridRows) / 2;
+	}
 
 	//make sure that the position is in the terrain;
 	if (!(z > 0 && x > 0 && z < m_grid[m_grid.size() - 1].y &&x < m_grid[m_grid.size() - 1].x))
@@ -107,22 +112,18 @@ float Terrain::getHeight(float x, float z)
 		return 0;
 	}
 
-	//top left corner of a sqaure in the grid
+	//position in grid of top left corner of the sqaure the entity is in
 	int gridPos = std::floor(x) + (m_gridRows) * std::floor(z);
 
 	 //convert to square space;
 	x -= std::floor(x);
 	z -= std::floor(z);
 
-	//use barrycentric interpolation to get height at point x,z. remember m_gridRows = number of vertices - 1.
-	if(x < 1-z)
-	{
-		std::cout << "x\n";
+	//use barrycentric interpolation to get height at point (x,z)
+	if(x < 1-z)	{	
 		return barryInterpolation(glm::vec3(0, m_terrainXYZ[gridPos].y, 0), glm::vec3(1, m_terrainXYZ[gridPos + 1].y, 0), glm::vec3(0, m_terrainXYZ[gridPos + m_gridRows].y, 1), glm::vec2(x, z));
 	}
 	else {
-		std::cout << "z\n";
-
 		return barryInterpolation(glm::vec3(1, m_terrainXYZ[gridPos + 1].y, 0),
 			glm::vec3(0, m_terrainXYZ[gridPos + m_gridRows].y, 1), glm::vec3(1, m_terrainXYZ[gridPos + m_gridRows + 1].y, 1),glm::vec2(x, z));
 	}

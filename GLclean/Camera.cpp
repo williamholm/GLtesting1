@@ -71,3 +71,18 @@ void Camera::updateCameraVectors()
 	this->Right = glm::normalize(glm::cross(this->Front, this->WorldUp));  // Normalize the vectors, because their length gets closer to 0 the more you look up or down which results in slower movement.
 	this->Up = glm::normalize(glm::cross(this->Right, this->Front));
 }
+
+void Camera::processEvents(float deltaTime)
+{
+	// Camera controls
+	if (InputManager::isKeyDown(GLFW_KEY_W))
+		ProcessKeyboard(FORWARD, deltaTime);
+	if (InputManager::isKeyDown(GLFW_KEY_S))
+		ProcessKeyboard(BACKWARD, deltaTime);
+	if (InputManager::isKeyDown(GLFW_KEY_A))
+		ProcessKeyboard(LEFT, deltaTime);
+	if (InputManager::isKeyDown(GLFW_KEY_D))
+		ProcessKeyboard(RIGHT, deltaTime);
+	ProcessMouseMovement(InputManager::getMouseOffSet().x, InputManager::getMouseOffSet().y);
+	ProcessMouseScroll(InputManager::getMouseScrollOffSet());
+}

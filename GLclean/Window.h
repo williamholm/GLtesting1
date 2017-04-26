@@ -11,7 +11,7 @@ public:
 	void init(int width, int height, char windowName[]);
 	GLFWwindow* m_window;
 
-	Window();
+	Window(int width, int height, char windowName[]);
 	~Window();
 };
 

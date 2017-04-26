@@ -63,7 +63,7 @@ public:
     void Draw(Shader shader)
 	{
 
-		glm::mat4x4 model = glm::translate(glm::mat4x4(1), m_position);
+		glm::mat4x4 model = glm::translate(glm::mat4x4(), m_position);
 		model = glm::scale(model, m_size);
 		glUniformMatrix4fv(glGetUniformLocation(shader.Program, "model"), 1, GL_FALSE, glm::value_ptr(model));
 		for (GLuint i = 0; i < this->meshes.size(); i++)
